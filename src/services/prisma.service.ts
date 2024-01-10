@@ -2,16 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import {HttpException, Injectable, OnModuleDestroy, OnModuleInit} from "@nestjs/common";
 import { z } from "zod";
 import {InvalidIDException} from "../exceptions/invalidID.exception";
-
-export const ProductSchema = z.object({
-    name: z.string(),
-    price: z.coerce.number(),
-    quantity: z.coerce.number(),
-    category: z.string(),
-    imgURL: z.string()
-})
-
-export type ProductBodyType = z.infer<typeof ProductSchema>;
+import {ProductBodyType} from "../schemas/productSchema";
+import {CategorySchemaType} from "../schemas/categorySchema";
+import {TCategory} from "../types/types";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy, OnModuleInit{
@@ -26,12 +19,19 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
         this.$disconnect();
     }
 
+    /****************************
+     PRODUCTS
+     ****************************/
+
     async createProduct(data: ProductBodyType){
         await this.produto.create({data})
     }
 
     async getAllProducts(){
         return await this.produto.findMany({
+            include: {
+                category: {select:{name: true}}
+            },
             orderBy: {
                 updatedAt: "desc",
             }
@@ -40,7 +40,10 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
 
     async getProductbyID(id: string){
         const product = await this.produto.findUnique({
-            where: { id: id }
+            where: { id: id },
+            include: {
+                category: {select:{name: true}}
+            }
         })
 
         if(product == null){ //n tem produto com esse id
@@ -48,6 +51,15 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
         }
 
         return product;
+    }
+
+    async getAllProductsbyCategory(categoriaId: string){
+        return await this.produto.findMany({
+            where: {categoryId: Number(categoriaId)},
+            orderBy: {
+                updatedAt: "desc"
+            }
+        })
     }
 
     async deleteProduct(id: string){
@@ -66,11 +78,10 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
                 where: { id: id },
                 data: {
                     name: data.name,
-                    category: data.category,
+                    categoryId: data.categoryId,
                     price: data.price,
                     imgURL: data.imgURL,
                     quantity: data.quantity,
-                    //updatedAt: Date.now().toString()
                 }
             })
 
@@ -78,5 +89,22 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
         } catch (e){
             throw new HttpException("ta errado", 400)
         }
+    }
+
+    /****************************
+     CATEGORIES
+     ****************************/
+
+    async createCategory(data: CategorySchemaType){
+        await this.categoria.create({data: data})
+    }
+
+    async getAllCategories(){
+        return await this.categoria.findMany({
+            select: {
+                id: true,
+                name: true
+            }
+        });
     }
 }

@@ -15,10 +15,23 @@ model Produto {
   name      String
   price     Decimal
   quantity  Int
-  category  String
   imgURL    String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  category   Categoria @relation(fields: [categoryId], references: [id])
+  categoryId Int
+
   @@map("produtos")
+}
+
+model Categoria {
+  id        Int      @id @unique @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  product Produto[]
+
+  @@map("categorias")
 }
