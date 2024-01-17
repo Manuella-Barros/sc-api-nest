@@ -24,7 +24,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
      ****************************/
 
     async createProduct(data: ProductBodyType){
-        await this.produto.create({data})
+        return await this.produto.create({data})
     }
 
     async getAllProducts(){
@@ -56,8 +56,23 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
     async getAllProductsbyCategory(categoriaId: string){
         return await this.produto.findMany({
             where: {categoryId: Number(categoriaId)},
+            include:{
+              category: {
+                  select: {name: true}
+              }
+            },
             orderBy: {
                 updatedAt: "desc"
+            }
+        })
+    }
+
+    async searchProductByName(productName: string){
+        return await this.produto.findMany({
+            where: {
+                name: {
+                    contains: productName,
+                }
             }
         })
     }
@@ -96,7 +111,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
      ****************************/
 
     async createCategory(data: CategorySchemaType){
-        await this.categoria.create({data: data})
+        return await this.categoria.create({data: data})
     }
 
     async getAllCategories(){

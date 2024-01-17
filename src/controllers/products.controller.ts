@@ -1,8 +1,7 @@
-import {Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, UsePipes} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, UsePipes} from '@nestjs/common';
 import {PrismaService} from "../services/prisma.service";
 import {ZodValidationPipe} from "../pipes/zodValidation.pipe";
 import {ProductBodyType, ProductSchema} from "../schemas/productSchema";
-import {TCategory} from "../types/types";
 
 @Controller("products")
 export class ProductsController {
@@ -14,7 +13,7 @@ export class ProductsController {
   @Post()
   @UsePipes(new ZodValidationPipe(ProductSchema))
   createProduct(@Body() body: ProductBodyType) {
-    this.prismaService.createProduct(body);
+    return this.prismaService.createProduct(body);
   }
 
   /****************************
@@ -33,6 +32,11 @@ export class ProductsController {
   @Get("category/:categoriaId")
   getAllProductsbyCategory(@Param("categoriaId") categoriaId: string){
     return this.prismaService.getAllProductsbyCategory(categoriaId);
+  }
+
+  @Get("/search/data")
+  searchProductByName(@Query("q") q: string){
+    return this.prismaService.searchProductByName(q);
   }
 
   /****************************
